@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Happy Birthday Dekies</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #e5e5e5;
+  --card: #ffffff;
+  --text: #1a1a1a;
+  --sub: #777;
+  --pink: #ff3d84;
+  --pill-bg: #cccccc;
+  --pill-text: #333;
+  --divider: #ebebeb;
+  --shadow: 0 2px 20px rgba(0,0,0,0.07);
+  --shadow-hover: 0 8px 32px rgba(0,0,0,0.13);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── PARTICLES ── */
+.particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.particle {
+  position: absolute; border-radius: 50%; opacity: 0;
+  animation: float-up linear infinite;
+}
+@keyframes float-up {
+  0%   { transform: translateY(110vh) scale(0.3); opacity: 0; }
+  8%   { opacity: 0.35; }
+  92%  { opacity: 0.12; }
+  100% { transform: translateY(-8vh) scale(1); opacity: 0; }
+}
+
+/* ── MUSIC PLAYER ── */
+.music-player {
+  position: fixed; bottom: 20px; right: 20px; z-index: 100;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-radius: 999px;
+  padding: 10px 18px 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  user-select: none;
+}
+.music-player:hover { transform: scale(1.05); }
+.music-disc {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: conic-gradient(#ff3d84, #ffb3cc, #1a1a1a, #ff3d84);
+  animation: spin 3s linear infinite; flex-shrink: 0;
+}
+.music-disc.paused { animation-play-state: paused; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.music-label { font-size: 12px; font-weight: 600; color: #333; line-height: 1.3; }
+.music-label span { display: block; font-weight: 400; color: #888; font-size: 11px; }
+.music-bars { display: flex; align-items: flex-end; gap: 2px; height: 18px; }
+.music-bar {
+  width: 3px; background: var(--pink); border-radius: 2px;
+  animation: bar-bounce 0.8s ease-in-out infinite alternate;
+}
+.music-bar:nth-child(1) { height: 6px;  animation-delay: 0s; }
+.music-bar:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+.music-bar:nth-child(3) { height: 9px;  animation-delay: 0.3s; }
+.music-bar:nth-child(4) { height: 16px; animation-delay: 0.45s; }
+.music-bar.paused { animation-play-state: paused; height: 4px !important; }
+@keyframes bar-bounce {
+  from { transform: scaleY(0.4); }
+  to   { transform: scaleY(1); }
+}
+#yt-frame { display: none; }
+
+/* ── HERO SECTION ── */
+.hero-section {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; z-index: 1;
+  padding: 60px 24px 80px; gap: 0;
+}
+
+.pill {
+  background: var(--pill-bg); color: var(--pill-text);
+  font-size: 13px; font-weight: 500; letter-spacing: 0.05em;
+  padding: 9px 22px; border-radius: 999px;
+  opacity: 0; transform: translateY(-14px);
+  animation: fade-down 0.6s ease forwards 0.1s;
+  margin-bottom: 40px;
+}
+
+/* ── HERO TITLE BOX ── */
+.hero-box {
+  position: relative; text-align: center;
+  width: 100%; max-width: 380px;
+  opacity: 0; transform: translateY(22px);
+  animation: fade-up 0.8s ease forwards 0.35s;
+  padding: 20px 40px;
+}
+.hero-happy {
+  font-family: 'DM Sans', sans-serif; font-weight: 600;
+  font-size: clamp(30px, 8vw, 46px); color: var(--pink);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  line-height: 1; display: block;
+}
+.hero-birthday {
+  font-family: 'Playfair Display', serif; font-style: italic; font-weight: 700;
+  font-size: clamp(58px, 15vw, 90px); color: var(--text);
+  line-height: 0.95; display: block; letter-spacing: -0.02em;
+}
+.hero-name {
+  font-family: 'DM Sans', sans-serif; font-weight: 600;
+  font-size: clamp(20px, 5.5vw, 30px); color: var(--pink);
+  letter-spacing: 0.22em; text-transform: uppercase;
+  display: block; margin-top: 6px;
+}
+
+/* ── STICKERS ── */
+.sticker {
+  position: absolute; pointer-events: none;
+  opacity: 0;
+}
+.sticker img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* positions */
+.s-disco { top: -20px; left: -20px;  width: 58px; height: 58px; animation: sticker-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards 0.6s, wobble-a 3.2s ease-in-out infinite 1.2s; }
+.s-bunny { top: -20px; right: -16px; width: 54px; height: 54px; animation: sticker-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards 0.75s, wobble-b 2.8s ease-in-out infinite 1.4s; }
+.s-bow   { bottom: 0px; left: -14px; width: 50px; height: 50px; animation: sticker-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards 0.9s, wobble-c 3.5s ease-in-out infinite 1.5s; }
+.s-8ball { bottom: 0px; right: -10px; width: 48px; height: 48px; animation: sticker-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards 1.05s, wobble-a 4s ease-in-out infinite 1.6s; }
+
+@keyframes sticker-pop {
+  0%   { opacity: 0; transform: scale(0.3) rotate(-15deg); }
+  80%  { opacity: 1; transform: scale(1.12) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes wobble-a {
+  0%,100% { transform: rotate(-7deg) translateY(0); }
+  50%      { transform: rotate(7deg) translateY(-6px); }
+}
+@keyframes wobble-b {
+  0%,100% { transform: rotate(5deg) translateY(0); }
+  50%      { transform: rotate(-5deg) translateY(-8px); }
+}
+@keyframes wobble-c {
+  0%,100% { transform: rotate(-4deg) scale(1); }
+  50%      { transform: rotate(8deg) scale(1.08); }
+}
+
+/* ── SCROLL HINT ── */
+.scroll-hint {
+  margin-top: 56px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0; animation: fade-up 0.6s ease forwards 1.5s;
+}
+.scroll-hint-text { font-size: 11px; color: var(--sub); letter-spacing: 0.12em; text-transform: uppercase; }
+.scroll-arrow {
+  width: 24px; height: 24px;
+  border-right: 2px solid var(--sub); border-bottom: 2px solid var(--sub);
+  transform: rotate(45deg);
+  animation: arrow-bounce 1.4s ease-in-out infinite;
+}
+@keyframes arrow-bounce {
+  0%,100% { transform: rotate(45deg) translateY(0); opacity: 0.4; }
+  50%      { transform: rotate(45deg) translateY(6px); opacity: 1; }
+}
+
+/* ── MESSAGES SECTION ── */
+.messages-section {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  padding: 0 20px 100px;
+  display: flex; flex-direction: column; gap: 22px;
+}
+
+/* section divider */
+.section-divider { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.section-divider-line { flex: 1; height: 1px; background: #c0c0c0; }
+.section-pill {
+  background: var(--pill-bg); color: var(--pill-text);
+  font-size: 12px; font-weight: 500;
+  padding: 7px 18px; border-radius: 999px; white-space: nowrap;
+  opacity: 0; transform: translateY(10px);
+}
+.section-pill.anim-in { animation: fade-up 0.5s ease forwards; }
+
+/* sticker row */
+.sticker-row {
+  display: flex; justify-content: center; align-items: center; gap: 16px;
+  padding: 4px 0; opacity: 0; transform: translateY(12px);
+}
+.sticker-row.anim-in { animation: fade-up 0.5s ease forwards; }
+.sticker-row img {
+  width: 36px; height: 36px; object-fit: contain;
+  animation: wobble-a 3s ease-in-out infinite;
+}
+.sticker-row img:nth-child(2) { animation-name: wobble-b; animation-delay: 0.4s; }
+.sticker-row img:nth-child(3) { animation-name: wobble-c; animation-delay: 0.8s; }
+
+/* ── CARD ── */
+.card {
+  background: var(--card); border-radius: 20px; padding: 20px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  opacity: 0; transform: translateY(26px);
+}
+.card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+.card.anim-in { animation: fade-up 0.55s ease forwards; }
+
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: #ddd; overflow: hidden; flex-shrink: 0;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card-meta { flex: 1; }
+.card-name   { font-weight: 600; font-size: 15px; }
+.card-handle { font-size: 13px; color: var(--sub); }
+
+/* FontAwesome icon buttons */
+.card-btn {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  line-height: 1; transition: transform 0.2s, color 0.2s;
+}
+.heart-btn { font-size: 20px; color: #ccc; }
+.heart-btn:hover { transform: scale(1.3); color: var(--pink); }
+.heart-btn.liked { color: var(--pink); }
+.close-btn { font-size: 16px; color: #bbb; }
+.close-btn:hover { color: #555; transform: scale(1.1); }
+
+/* media */
+.media-wrap { border-radius: 14px; overflow: hidden; position: relative; min-height: 240px; }
+.media-bg {
+  width: 100%; height: 240px;
+  background: linear-gradient(145deg, #2a1040 0%, #1c1b2e 45%, #0e1825 100%);
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.media-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(170,80,200,0.35) 0%, transparent 70%);
+}
+/* Dekies photo (replace src with real URL) */
+.media-photo {
+  width: 100%; height: 100%; object-fit: cover; object-position: top;
+  position: absolute; inset: 0; display: block; z-index: 1;
+}
+.media-gradient-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
+  background: linear-gradient(to bottom, transparent, rgba(10,8,20,0.88));
+  z-index: 2;
+}
+.media-caption {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 14px 16px; color: #ffffffdd;
+  font-size: 13.5px; line-height: 1.55; z-index: 3;
+}
+
+.msg-text { font-size: 14.5px; line-height: 1.75; color: #3a3a3a; }
+.card-divider { border: none; border-top: 1px solid var(--divider); margin-top: 18px; }
+
+
+/* ── GALLERY ── */
+.gallery-section {
+  opacity: 0; transform: translateY(24px);
+}
+.gallery-section.anim-in { animation: fade-up 0.6s ease forwards; }
+
+.gallery-label {
+  font-size: 11px; font-weight: 600; color: var(--sub);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  text-align: center; margin-bottom: 16px;
+}
+
+.gallery-scattered {
+  position: relative;
+  height: 340px;
+  margin: 0 -4px;
+}
+
+.gpol {
+  position: absolute;
+  background: #fff;
+  border-radius: 6px;
+  padding: 6px 6px 22px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13), 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.28s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.25s ease;
+  overflow: hidden;
+}
+.gpol:hover { z-index: 20 !important; box-shadow: 0 14px 40px rgba(0,0,0,0.22); }
+.gpol img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+  border-radius: 3px; background: #e0e0e0;
+}
+.gpol .gpol-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  text-align: center;
+  font-size: 10px; font-weight: 500; color: #999;
+  padding: 3px 4px 5px;
+  letter-spacing: 0.04em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.gpol:nth-child(1) { width:46%; height:52%; left:2%;  top:0%;  transform:rotate(-4deg);   z-index:3; }
+.gpol:nth-child(2) { width:50%; height:56%; left:46%; top:2%;  transform:rotate(3.5deg);  z-index:4; }
+.gpol:nth-child(3) { width:54%; height:50%; left:4%;  top:47%; transform:rotate(2deg);    z-index:5; }
+.gpol:nth-child(4) { width:42%; height:44%; left:52%; top:51%; transform:rotate(-3deg);   z-index:2; }
+.gpol:nth-child(5) { width:36%; height:38%; left:29%; top:22%; transform:rotate(1deg);    z-index:6; }
+
+.gpol:nth-child(1):hover { transform: rotate(-4deg) scale(1.07) translateY(-5px); }
+.gpol:nth-child(2):hover { transform: rotate(3.5deg) scale(1.07) translateY(-5px); }
+.gpol:nth-child(3):hover { transform: rotate(2deg) scale(1.07) translateY(-5px); }
+.gpol:nth-child(4):hover { transform: rotate(-3deg) scale(1.07) translateY(-5px); }
+.gpol:nth-child(5):hover { transform: rotate(1deg) scale(1.09) translateY(-7px); }
+
+/* lightbox */
+.lightbox {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.84);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox img {
+  max-width: 90vw; max-height: 85vh;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  transform: scale(0.88);
+  transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  object-fit: contain;
+}
+.lightbox.open img { transform: scale(1); }
+.lightbox-close {
+  position: absolute; top: 20px; right: 24px;
+  color: #fff; font-size: 30px; cursor: pointer;
+  line-height: 1; opacity: 0.75; transition: opacity 0.2s;
+  background: none; border: none;
+}
+.lightbox-close:hover { opacity: 1; }
+
+/* ── SIGNATURE SPIKES ── */
+.sig-wrap {
+  display: flex; justify-content: center; align-items: flex-end;
+  gap: 4px; padding: 24px 0 0;
+  opacity: 0; transform: translateY(12px);
+}
+.sig-wrap.anim-in { animation: fade-up 0.6s ease forwards; }
+.spike {
+  background: linear-gradient(180deg, #999 0%, #bbb 100%);
+  border-radius: 3px 3px 1px 1px; transform-origin: bottom center;
+  animation: spike-wave 2.2s ease-in-out infinite;
+}
+.spike:nth-child(1) { width:3px; height:38px;  animation-delay:0s; }
+.spike:nth-child(2) { width:3px; height:65px;  animation-delay:0.12s; }
+.spike:nth-child(3) { width:3px; height:95px;  animation-delay:0.24s; }
+.spike:nth-child(4) { width:3px; height:75px;  animation-delay:0.36s; }
+.spike:nth-child(5) { width:3px; height:50px;  animation-delay:0.48s; }
+.spike:nth-child(6) { width:3px; height:85px;  animation-delay:0.6s; }
+.spike:nth-child(7) { width:3px; height:58px;  animation-delay:0.72s; }
+@keyframes spike-wave {
+  0%,100% { transform: scaleY(1); opacity: 0.55; }
+  50%      { transform: scaleY(1.3); opacity: 1; }
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fade-up   { to { opacity:1; transform:translateY(0); } }
+@keyframes fade-down { to { opacity:1; transform:translateY(0); } }
+
+/* ── CONFETTI ── */
+.confetti-piece {
+  position: fixed; width: 7px; height: 7px; border-radius: 2px;
+  pointer-events: none; z-index: 9999;
+  animation: conf-fly 1s ease forwards;
+}
+@keyframes conf-fly {
+  0%   { transform: translate(0,0) rotate(0deg); opacity:1; }
+  100% { transform: translate(var(--tx),var(--ty)) rotate(540deg); opacity:0; }
+}
+
+/* ── RESPONSIVE ── */
+@media (min-width: 768px) {
+  .messages-section { max-width: 520px; }
+  .hero-section { padding: 80px 40px 100px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .pill,.hero-box,.scroll-hint,.sticker,.section-pill,.card,.sticker-row,.sig-wrap
+    { opacity:1 !important; transform:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<audio id="bgMusic" loop autoplay>
+  <source src="lagu.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Floating music player -->
+<div class="music-player" id="musicPlayer" onclick="toggleMusic()">
+  <div class="music-disc" id="disc"></div>
+  <div class="music-label">
+    Happy Birthday
+    <span id="music-status">tap to pause</span>
+  </div>
+  <div class="music-bars">
+    <div class="music-bar"></div>
+    <div class="music-bar"></div>
+    <div class="music-bar"></div>
+    <div class="music-bar"></div>
+  </div>
+</div>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero-section">
+
+  <div class="pill">FROM : iSaac & Exile.</div>
+
+  <div class="hero-box">
+
+    <!-- 
+      STICKERS: ganti src="" dengan URL gambar sticker kamu 
+      Contoh: src="https://i.imgur.com/xxxxx.png"
+    -->
+    <div class="sticker s-disco">
+      <img src="https://i.ibb.co/v6CpRD3f/Proyek-Baru-637-E909466.png" alt="disco" />
+    </div>
+    <div class="sticker s-bunny">
+      <img src="https://i.ibb.co/5WpgRHVt/Proyek-Baru-637-6-D1-C542.png" alt="bunny" />
+    </div>
+    <div class="sticker s-bow">
+      <img src="https://i.ibb.co/CKqrc5RG/Proyek-Baru-637-3-C1-B8-C0.png" alt="bow" />
+    </div>
+    <div class="sticker s-8ball">
+      <img src="https://i.ibb.co/s91n8KqL/Proyek-Baru-637-254536-C.png" alt="8ball" />
+    </div>
+
+    <span class="hero-happy">HAPPY</span>
+    <span class="hero-birthday">Birthday</span>
+    <span class="hero-name">DEKIES</span>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-hint-text">scroll</div>
+    <div class="scroll-arrow"></div>
+  </div>
+
+</section>
+
+<!-- ═══════════ MESSAGES ═══════════ -->
+<section class="messages-section">
+
+  <!-- Dekies post card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="avatar">
+        <!-- ganti src dengan URL foto profil Dekies -->
+        <img src="https://i.ibb.co/SwfjWXRB/Proyek-Baru-637-2-B38419.png" alt="Dekies" />
+      </div>
+      <div class="card-meta">
+        <div class="card-name">Dekies</div>
+        <div class="card-handle">@o_onyak</div>
+      </div>
+      <button class="card-btn heart-btn" id="likeBtn" onclick="handleLike(event)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>
+    <div class="media-wrap">
+      <div class="media-bg">
+        <div class="media-glow"></div>
+        <!-- ganti src dengan URL foto Dekies -->
+        <img class="media-photo" src="https://i.ibb.co/33rjPhy/IMG-20260616-WA0012.jpg" alt="Dekies photo" onerror="this.style.display='none'" />
+      </div>
+      <div class="media-gradient-overlay"></div>
+      <div class="media-caption">
+        congrats udah survive satu season lagi. character development jalan terus, semoga season berikutnya isinya banyak plot twist bagus dan minim mental breakdown
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticker row deco — ganti src dengan sticker URL mu -->
+  <div class="sticker-row">
+    <img src="https://i.ibb.co/5WpgRHVt/Proyek-Baru-637-6-D1-C542.png"  alt="🪩" />
+    <img src="https://i.ibb.co/s91n8KqL/Proyek-Baru-637-254536-C.png"   alt="🎀" />
+    <img src="https://i.ibb.co/CKqrc5RG/Proyek-Baru-637-3-C1-B8-C0.png" alt="🐰" />
+  </div>
+
+
+  <!-- ── GALLERY ── -->
+  <div class="gallery-section">
+    <div class="gallery-label">memories</div>
+    <div class="gallery-scattered" id="gallery">
+
+      <!-- Ganti src setiap GALLERY_PHOTO_X_URL dengan URL foto kamu -->
+
+      <div class="gpol" onclick="openLightbox('GALLERY_PHOTO_1_URL')">
+        <img src="https://i.ibb.co/cSKQp01b/Screenshot-20260614-213948.jpg" alt="memory 1" onerror="this.style.background='#ddd'" />
+        <span class="gpol-label">sl∙l foto</span>
+      </div>
+
+      <div class="gpol" onclick="openLightbox('GALLERY_PHOTO_2_URL')">
+        <img src="https://i.ibb.co/qY3JbxJQ/3191289893-134640979158643-1775389403332.png" alt="memory 2" onerror="this.style.background='#ddd'" />
+        <span class="gpol-label">PLGR GROUP!</span>
+      </div>
+
+      <div class="gpol" onclick="openLightbox('GALLERY_PHOTO_3_URL')">
+        <img src="https://i.ibb.co/wNSFhXkS/3191289893-108618727917401-1781446995630.png" alt="memory 3" onerror="this.style.background='#ddd'" />
+        <span class="gpol-label">bareng kami</span>
+      </div>
+
+      <div class="gpol" onclick="openLightbox('GALLERY_PHOTO_4_URL')">
+        <img src="https://i.ibb.co/bMCMsKCc/Proyek-Baru-B1-B4257.png" alt="memory 4" onerror="this.style.background='#ddd'" />
+        <span class="gpol-label">good times</span>
+      </div>
+
+      <div class="gpol" onclick="openLightbox('GALLERY_PHOTO_5_URL')">
+        <img src="https://i.ibb.co/LXnd0YWm/IMG-20260616-WA0010.jpg" alt="memory 5" onerror="this.style.background='#ddd'" />
+        <span class="gpol-label">Braincell</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Section label -->
+  <div class="section-divider">
+    <div class="section-divider-line"></div>
+    <div class="section-pill">A Message From Us</div>
+    <div class="section-divider-line"></div>
+  </div>
+
+  <!-- iSaac card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="avatar">
+        <!-- ganti src dengan URL foto profil iSaac -->
+        <img src="https://i.ibb.co/gbCWXjcC/7e55341a2a3f090075b5af1ade02c8a3.jpg" alt="iSaac" />
+      </div>
+      <div class="card-meta">
+        <div class="card-name">iSaac!</div>
+        <div class="card-handle">@stillisaacc</div>
+      </div>
+      <button class="card-btn close-btn" onclick="closeCard(this)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <p class="msg-text">
+      happy birthday, dekies! 
+      
+selamat bertambah umur dan selamat membuka chapter baru. semoga tahun ini lebih banyak hal baik datang ke hidupmu, lebih banyak tawa daripada sedihnya, dan lebih banyak momen yang bikin kamu bilang, "untung aku tetap lanjut sampai hari ini."
+semoga semua hal yang lagi kamu tunggu, usahakan, dan doakan bisa datang di waktu yang tepat. have the best birthday, dekies. jangan lupa bahagia hari ini, besok, dan seterusnya. 
+    </p>
+    <hr class="card-divider"/>
+  </div>
+
+  <!-- Exile card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="avatar">
+        <img src="https://i.ibb.co/BdG0mH0/63c592716468de24cfb1ef6df6362d80.jpg" alt="Exile" />
+      </div>
+      <div class="card-meta">
+        <div class="card-name">Exile.</div>
+        <div class="card-handle">@sarasahr25</div>
+      </div>
+      <button class="card-btn close-btn" onclick="closeCard(this)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <p class="msg-text">
+      happy birthday, jeje! 
+
+semoga hari ini menjadi salah satu hari yang paling membahagiakan untukmu. meskipun kita baru saling mengenal dalam waktu yang tidak terlalu lama, aku sangat bersyukur bisa bertemu denganmu, jeje. lucu rasanya bagaimana seseorang yang baru hadir dalam hidup kita bisa terasa begitu nyaman untuk diajak mengobrol dan berbagi cerita.
+
+jeje, terima kasih karena selalu mau mendengarkan cerita cerita randomku, karena sudah menjadi pribadi yang hangat, dan karena membuat setiap percakapan terasa mudah dan menyenangkan. aku benar-benar senang bisa mengenalmu, dan aku bahagia karena jalan kita dipertemukan.
+
+kalau suatu hari nanti kita sibuk dengan kehidupan masing masing atau bahkan sempat kehilangan kontak, aku berharap kita tetap mengingat satu sama lain dengan baik dan tidak pernah ragu untuk saling menyapa lagi. Seberapa pun waktu berlalu, aku berharap akan selalu ada ruang kecil untuk persahabatan kita.
+
+aku berharap tahun ini membawa banyak kebahagiaan, kesehatan yang baik, kesempatan kesempatan yang menyenangkan, dan semua hal kecil yang bisa membuatmu tersenyum. tetaplah menjadi pribadi yang baik, tulus, dan luar biasa seperti sekarang ya, jeje.
+
+terima kasih karena sudah menjadi dirimu sendiri, jeje. aku sangat senang bisa mengenalmu, dan semoga babak baru dalam hidupmu dipenuhi kenangan indah serta banyak alasan untuk bahagia.
+
+sekali lagi, happy birthday , jeje! nikmati hari spesialmu dan jangan lupa tersenyum lebih banyak hari ini. 
+    </p>
+    <hr class="card-divider"/>
+  </div>
+
+  <!-- Signature spikes -->
+  <div class="sig-wrap">
+    <div class="spike"></div>
+    <div class="spike"></div>
+    <div class="spike"></div>
+    <div class="spike"></div>
+    <div class="spike"></div>
+    <div class="spike"></div>
+    <div class="spike"></div>
+  </div>
+
+</section>
+
+<script>
+/* ── Particles ── */
+const pContainer = document.getElementById('particles');
+const pColors = ['#ff3d84','#ffb3cc','#d5d5d5','#ffffff','#ff7ab0','#aaa'];
+for (let i = 0; i < 26; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  const s = Math.random() * 9 + 3;
+  p.style.cssText = `width:${s}px;height:${s}px;left:${Math.random()*100}%;background:${pColors[Math.floor(Math.random()*pColors.length)]};animation-duration:${9+Math.random()*13}s;animation-delay:${Math.random()*12}s;`;
+  pContainer.appendChild(p);
+}
+
+/* ── Scroll reveal ── */
+const revealEls = document.querySelectorAll('.card, .section-pill, .sticker-row, .sig-wrap, .gallery-section');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('anim-in'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+revealEls.forEach(el => obs.observe(el));
+
+/* ── Music toggle ── */
+const music  = document.getElementById('bgMusic');
+const disc   = document.getElementById('disc');
+const bars   = document.querySelectorAll('.music-bar');
+const status = document.getElementById('music-status');
+
+let playing = true;
+
+function toggleMusic() {
+  if (playing) {
+    music.pause();
+    disc.classList.add('paused');
+    bars.forEach(b => b.classList.add('paused'));
+    status.textContent = 'tap to play';
+  } else {
+    music.play();
+    disc.classList.remove('paused');
+    bars.forEach(b => b.classList.remove('paused'));
+    status.textContent = 'tap to pause';
+  }
+
+  playing = !playing;
+}
+
+/* ── Like / Confetti ── */
+function handleLike(e) {
+  document.getElementById('likeBtn').classList.toggle('liked');
+  burstConfetti(e);
+}
+function burstConfetti(e) {
+  const cols = ['#ff3d84','#ff80b0','#ffcce0','#fff','#1a1a1a','#ff1a6b','#ffd6e8'];
+  for (let i = 0; i < 22; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 55 + Math.random() * 90;
+    c.style.cssText = `left:${e.clientX}px;top:${e.clientY}px;background:${cols[Math.floor(Math.random()*cols.length)]};--tx:${Math.cos(angle)*dist}px;--ty:${Math.sin(angle)*dist-40}px;`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1100);
+  }
+}
+
+
+/* ── Lightbox ── */
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightbox-img');
+  if (!src || src.includes('GALLERY_PHOTO')) return;
+  lbImg.src = src;
+  lb.classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* ── Close card ── */
+function closeCard(btn) {
+  const card = btn.closest('.card');
+  card.style.transition = 'opacity 0.35s ease, transform 0.35s ease, max-height 0.45s ease, padding 0.4s ease, margin 0.4s ease';
+  card.style.opacity = '0';
+  card.style.transform = 'translateY(-8px) scale(0.97)';
+  setTimeout(() => {
+    card.style.maxHeight = '0'; card.style.padding = '0';
+    card.style.marginTop = '-22px'; card.style.overflow = 'hidden';
+  }, 340);
+}
+</script>
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+  <img id="lightbox-img" src="" alt="full photo" onclick="event.stopPropagation()" />
+</div>
+
+</body>
+</html>
